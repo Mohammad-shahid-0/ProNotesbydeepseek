@@ -1,0 +1,1440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProNotes</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            /* Dark Theme (Default) */
+            --bg-primary: #121212;
+            --bg-secondary: #1e1e1e;
+            --bg-tertiary: #2d2d2d;
+            --text-primary: #f5f5f5;
+            --text-secondary: #b0b0b0;
+            --accent: #bb86fc;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --danger: #f44336;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            --border-radius: 12px;
+        }
+
+        .light-theme {
+            /* Light Theme */
+            --bg-primary: #f5f5f5;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f0f0f0;
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --accent: #6200ea;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 16px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 0 16px;
+        }
+
+        /* Header Styles */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent), #03dac5);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .logo i {
+            font-size: 1.5rem;
+            color: var(--accent);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 16px;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+        }
+
+        .icon-btn:hover {
+            background-color: var(--bg-tertiary);
+        }
+
+        /* Search Bar */
+        .search-container {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: var(--bg-secondary);
+            border-radius: var(--border-radius);
+            padding: 8px 16px;
+            box-shadow: var(--card-shadow);
+            z-index: 100;
+            display: none;
+            margin-top: 8px;
+        }
+
+        .search-container.active {
+            display: block;
+        }
+
+        .search-container input {
+            width: 100%;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 24px;
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        /* Notes Grid/List View */
+        .view-toggle {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 16px;
+            gap: 8px;
+        }
+
+        .view-toggle button {
+            background-color: var(--bg-tertiary);
+            color: var(--text-secondary);
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .view-toggle button.active {
+            background-color: var(--accent);
+            color: white;
+        }
+
+        .notes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 80px;
+        }
+
+        .notes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 80px;
+        }
+
+        .note-card {
+            background-color: var(--bg-secondary);
+            border-radius: var(--border-radius);
+            padding: 16px;
+            box-shadow: var(--card-shadow);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .note-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .note-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+
+        .note-card[data-color="purple"]::before { background-color: #bb86fc; }
+        .note-card[data-color="blue"]::before { background-color: #03a9f4; }
+        .note-card[data-color="green"]::before { background-color: #4caf50; }
+        .note-card[data-color="orange"]::before { background-color: #ff9800; }
+        .note-card[data-color="pink"]::before { background-color: #e91e63; }
+
+        .note-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .note-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+        }
+
+        .note-lock {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .note-content {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            height: 60px;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+        }
+
+        .note-date {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        /* FAB Button */
+        .fab {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background-color: var(--accent);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+            cursor: pointer;
+            border: none;
+            z-index: 90;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .fab:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Modals */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background-color: var(--bg-secondary);
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--card-shadow);
+            padding: 24px;
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--bg-tertiary);
+            border-radius: 8px;
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 1rem;
+            resize: vertical;
+        }
+
+        .form-group textarea {
+            min-height: 150px;
+        }
+
+        .color-palette {
+            display: flex;
+            gap: 12px;
+            margin: 16px 0;
+        }
+
+        .color-option {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .color-option.active {
+            border-color: white;
+            box-shadow: 0 0 0 2px var(--bg-secondary);
+        }
+
+        .color-option[data-color="purple"] { background-color: #bb86fc; }
+        .color-option[data-color="blue"] { background-color: #03a9f4; }
+        .color-option[data-color="green"] { background-color: #4caf50; }
+        .color-option[data-color="orange"] { background-color: #ff9800; }
+        .color-option[data-color="pink"] { background-color: #e91e63; }
+
+        .modal-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 24px;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background-color: var(--accent);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-secondary {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        /* View Modal */
+        .view-modal .note-title {
+            font-size: 1.8rem;
+            margin-bottom: 16px;
+        }
+
+        .view-modal .note-content {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: var(--text-primary);
+            white-space: pre-wrap;
+            margin-bottom: 24px;
+        }
+
+        .view-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 16px;
+        }
+
+        /* Settings Menu */
+        .settings-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background-color: var(--bg-secondary);
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            padding: 16px;
+            width: 250px;
+            z-index: 100;
+            display: none;
+            margin-top: 8px;
+        }
+
+        .settings-menu.active {
+            display: block;
+        }
+
+        .settings-item {
+            padding: 12px 0;
+            border-bottom: 1px solid var(--bg-tertiary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .settings-item:last-child {
+            border-bottom: none;
+        }
+
+        .settings-item i {
+            width: 24px;
+            text-align: center;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 0;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+
+        /* Tutorial Highlight */
+        .tutorial-highlight {
+            position: fixed;
+            background-color: rgba(187, 134, 252, 0.3);
+            border-radius: 50%;
+            z-index: 200;
+            pointer-events: none;
+            animation: pulse 2s infinite;
+        }
+
+        /* Backup Modal */
+        .backup-item {
+            padding: 12px;
+            background-color: var(--bg-tertiary);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .backup-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .backup-actions button {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        
+        .backup-restore {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        .backup-delete {
+            background-color: var(--danger);
+            color: white;
+        }
+        
+        .no-backups {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-secondary);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); opacity: 0.7; }
+            50% { transform: scale(1.1); opacity: 0.9; }
+            100% { transform: scale(0.95); opacity: 0.7; }
+        }
+
+        /* Responsive */
+        @media (max-width: 500px) {
+            .notes-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-actions {
+                gap: 8px;
+            }
+            
+            .logo h1 {
+                font-size: 1.5rem;
+            }
+            
+            .backup-item {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="logo">
+                <i class="fas fa-sticky-note"></i>
+                <h1>ProNotes</h1>
+            </div>
+            <div class="header-actions">
+                <button class="icon-btn" id="searchBtn">
+                    <i class="fas fa-search"></i>
+                </button>
+                <button class="icon-btn" id="viewToggleBtn">
+                    <i class="fas fa-th-large"></i>
+                </button>
+                <button class="icon-btn" id="settingsBtn">
+                    <i class="fas fa-cog"></i>
+                </button>
+            </div>
+            
+            <!-- Search Container -->
+            <div class="search-container" id="searchContainer">
+                <input type="text" id="searchInput" placeholder="Search notes...">
+            </div>
+            
+            <!-- Settings Menu -->
+            <div class="settings-menu" id="settingsMenu">
+                <div class="settings-item" id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                    <span>Switch to Light Theme</span>
+                </div>
+                <div class="settings-item" id="sortNotesBtn">
+                    <i class="fas fa-sort"></i>
+                    <span>Sort by Date</span>
+                </div>
+                <div class="settings-item" id="setPasswordBtn">
+                    <i class="fas fa-lock"></i>
+                    <span>Set Master Password</span>
+                </div>
+                <div class="settings-item" id="backupNotesBtn">
+                    <i class="fas fa-save"></i>
+                    <span>Backup Notes</span>
+                </div>
+                <div class="settings-item" id="restoreNotesBtn">
+                    <i class="fas fa-file-import"></i>
+                    <span>Restore Notes</span>
+                </div>
+                <div class="settings-item" id="deleteAllBtn">
+                    <i class="fas fa-trash"></i>
+                    <span>Delete All Notes</span>
+                </div>
+            </div>
+        </header>
+        
+        <!-- View Toggle -->
+        <div class="view-toggle">
+            <button id="gridViewBtn" class="active"><i class="fas fa-th-large"></i> Grid</button>
+            <button id="listViewBtn"><i class="fas fa-list"></i> List</button>
+        </div>
+        
+        <!-- Notes Container -->
+        <div class="notes-grid" id="notesContainer">
+            <!-- Notes will be dynamically added here -->
+        </div>
+        
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState">
+            <i class="fas fa-sticky-note"></i>
+            <h2>No Notes Found</h2>
+            <p>Create your first note by tapping the + button below</p>
+        </div>
+        
+        <!-- FAB Button -->
+        <button class="fab" id="addNoteBtn">
+            <i class="fas fa-plus"></i>
+        </button>
+    </div>
+    
+    <!-- Edit Note Modal -->
+    <div class="modal" id="editNoteModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="editModalTitle">New Note</h2>
+                <button class="close-modal" id="closeEditModal">&times;</button>
+            </div>
+            <div class="form-group">
+                <label for="noteTitle">Title</label>
+                <input type="text" id="noteTitle" placeholder="Note title">
+            </div>
+            <div class="form-group">
+                <label for="noteContent">Content</label>
+                <textarea id="noteContent" placeholder="Write your note here..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Color</label>
+                <div class="color-palette">
+                    <div class="color-option active" data-color="purple"></div>
+                    <div class="color-option" data-color="blue"></div>
+                    <div class="color-option" data-color="green"></div>
+                    <div class="color-option" data-color="orange"></div>
+                    <div class="color-option" data-color="pink"></div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="noteLocked"> Lock note with password
+                </label>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-danger" id="deleteNoteBtn">Delete</button>
+                <button class="btn btn-primary" id="saveNoteBtn">Save</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- View Note Modal -->
+    <div class="modal" id="viewNoteModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Note Details</h2>
+                <button class="close-modal" id="closeViewModal">&times;</button>
+            </div>
+            <div>
+                <h2 class="note-title" id="viewNoteTitle">Sample Note Title</h2>
+                <div class="note-content" id="viewNoteContent">
+                    This is a sample note content. You can write anything you want here. 
+                    The content will be displayed in a readable format.
+                </div>
+                <div class="note-date">Created: <span id="viewNoteDate">June 22, 2023</span></div>
+            </div>
+            <div class="view-actions">
+                <button class="icon-btn" id="shareNoteBtn">
+                    <i class="fas fa-share-alt"></i>
+                </button>
+                <button class="icon-btn" id="copyNoteBtn">
+                    <i class="fas fa-copy"></i>
+                </button>
+                <button class="icon-btn" id="editNoteBtn">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="icon-btn" id="lockNoteBtn">
+                    <i class="fas fa-lock"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Backup Modal -->
+    <div class="modal" id="backupModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Backup & Restore</h2>
+                <button class="close-modal" id="closeBackupModal">&times;</button>
+            </div>
+            <div class="form-group">
+                <button class="btn btn-primary" id="createBackupBtn" style="width:100%;">
+                    <i class="fas fa-plus"></i> Create New Backup
+                </button>
+            </div>
+            <h3 style="margin: 20px 0 10px;">Available Backups</h3>
+            <div id="backupList">
+                <!-- Backup items will be added here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tutorial Highlight -->
+    <div class="tutorial-highlight" id="tutorialHighlight"></div>
+    
+    <script>
+        // App State
+        let currentView = 'grid';
+        let notes = [];
+        let currentNoteId = null;
+        let selectedColor = 'purple';
+        let tutorialActive = false;
+        let masterPassword = null;
+        let sortOrder = 'newest';
+        
+        // DOM Elements
+        const notesContainer = document.getElementById('notesContainer');
+        const emptyState = document.getElementById('emptyState');
+        const searchBtn = document.getElementById('searchBtn');
+        const searchContainer = document.getElementById('searchContainer');
+        const searchInput = document.getElementById('searchInput');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const settingsMenu = document.getElementById('settingsMenu');
+        const themeToggle = document.getElementById('themeToggle');
+        const sortNotesBtn = document.getElementById('sortNotesBtn');
+        const setPasswordBtn = document.getElementById('setPasswordBtn');
+        const backupNotesBtn = document.getElementById('backupNotesBtn');
+        const restoreNotesBtn = document.getElementById('restoreNotesBtn');
+        const deleteAllBtn = document.getElementById('deleteAllBtn');
+        const gridViewBtn = document.getElementById('gridViewBtn');
+        const listViewBtn = document.getElementById('listViewBtn');
+        const addNoteBtn = document.getElementById('addNoteBtn');
+        const editNoteModal = document.getElementById('editNoteModal');
+        const viewNoteModal = document.getElementById('viewNoteModal');
+        const backupModal = document.getElementById('backupModal');
+        const closeEditModal = document.getElementById('closeEditModal');
+        const closeViewModal = document.getElementById('closeViewModal');
+        const closeBackupModal = document.getElementById('closeBackupModal');
+        const noteTitle = document.getElementById('noteTitle');
+        const noteContent = document.getElementById('noteContent');
+        const saveNoteBtn = document.getElementById('saveNoteBtn');
+        const deleteNoteBtn = document.getElementById('deleteNoteBtn');
+        const colorOptions = document.querySelectorAll('.color-option');
+        const viewNoteTitle = document.getElementById('viewNoteTitle');
+        const viewNoteContent = document.getElementById('viewNoteContent');
+        const viewNoteDate = document.getElementById('viewNoteDate');
+        const editNoteBtn = document.getElementById('editNoteBtn');
+        const lockNoteBtn = document.getElementById('lockNoteBtn');
+        const shareNoteBtn = document.getElementById('shareNoteBtn');
+        const copyNoteBtn = document.getElementById('copyNoteBtn');
+        const createBackupBtn = document.getElementById('createBackupBtn');
+        const backupList = document.getElementById('backupList');
+        const tutorialHighlight = document.getElementById('tutorialHighlight');
+        const editModalTitle = document.getElementById('editModalTitle');
+        
+        // Initialize the app
+        function init() {
+            loadMasterPassword();
+            loadNotes();
+            renderNotes();
+            setupEventListeners();
+            checkFirstLaunch();
+        }
+        
+        // Load master password from localStorage
+        function loadMasterPassword() {
+            masterPassword = localStorage.getItem('pronotes_master_password');
+        }
+        
+        // Load notes from localStorage
+        function loadNotes() {
+            const storedNotes = localStorage.getItem('pronotes_notes');
+            if (storedNotes) {
+                notes = JSON.parse(storedNotes);
+            }
+        }
+        
+        // Save notes to localStorage
+        function saveNotes() {
+            localStorage.setItem('pronotes_notes', JSON.stringify(notes));
+        }
+        
+        // Sort notes by date
+        function sortNotes() {
+            if (sortOrder === 'newest') {
+                notes.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                sortOrder = 'oldest';
+                sortNotesBtn.querySelector('span').textContent = 'Sort by Date (Newest)';
+            } else {
+                notes.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+                sortOrder = 'newest';
+                sortNotesBtn.querySelector('span').textContent = 'Sort by Date (Oldest)';
+            }
+            renderNotes();
+        }
+        
+        // Render notes to the UI
+        function renderNotes(filteredNotes = null) {
+            const notesToRender = filteredNotes || [...notes];
+            
+            // Sort by date (newest first by default)
+            notesToRender.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            
+            if (notesToRender.length === 0) {
+                notesContainer.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            notesContainer.style.display = currentView === 'grid' ? 'grid' : 'flex';
+            emptyState.style.display = 'none';
+            notesContainer.innerHTML = '';
+            
+            notesToRender.forEach(note => {
+                const noteElement = document.createElement('div');
+                noteElement.className = currentView === 'grid' ? 'note-card' : 'note-card';
+                noteElement.dataset.id = note.id;
+                noteElement.dataset.color = note.color;
+                
+                const date = new Date(note.createdAt);
+                const formattedDate = date.toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    year: 'numeric' 
+                });
+                
+                noteElement.innerHTML = `
+                    <div class="note-header">
+                        <div class="note-title">${note.title}</div>
+                        ${note.locked ? '<div class="note-lock"><i class="fas fa-lock"></i></div>' : ''}
+                    </div>
+                    <div class="note-content">${note.locked ? '🔒 Content is locked' : note.content}</div>
+                    <div class="note-date">${formattedDate}</div>
+                `;
+                
+                noteElement.addEventListener('click', () => openNote(note.id));
+                notesContainer.appendChild(noteElement);
+            });
+        }
+        
+        // Create a new note
+        function createNote() {
+            currentNoteId = null;
+            noteTitle.value = '';
+            noteContent.value = '';
+            document.querySelector('.color-option[data-color="purple"]').classList.add('active');
+            selectedColor = 'purple';
+            document.getElementById('noteLocked').checked = false;
+            deleteNoteBtn.style.display = 'none';
+            editModalTitle.textContent = 'New Note';
+            openModal(editNoteModal);
+        }
+        
+        // Open a note for viewing
+        function openNote(id) {
+            const note = notes.find(note => note.id === id);
+            if (!note) return;
+            
+            if (note.locked && masterPassword) {
+                const password = prompt('This note is locked. Enter your master password:');
+                if (password !== masterPassword) {
+                    alert('Incorrect password!');
+                    return;
+                }
+            } else if (note.locked) {
+                alert('This note is locked. Please set a master password in settings first.');
+                return;
+            }
+            
+            currentNoteId = id;
+            viewNoteTitle.textContent = note.title;
+            viewNoteContent.textContent = note.locked ? '🔒 Content is locked' : note.content;
+            
+            const date = new Date(note.createdAt);
+            viewNoteDate.textContent = date.toLocaleDateString('en-US', { 
+                month: 'long', 
+                day: 'numeric', 
+                year: 'numeric' 
+            });
+            
+            // Update lock button icon
+            lockNoteBtn.innerHTML = note.locked ? '<i class="fas fa-unlock"></i>' : '<i class="fas fa-lock"></i>';
+            lockNoteBtn.title = note.locked ? 'Unlock Note' : 'Lock Note';
+            
+            openModal(viewNoteModal);
+        }
+        
+        // Open a note for editing
+        function editNote() {
+            const note = notes.find(note => note.id === currentNoteId);
+            if (!note) return;
+            
+            noteTitle.value = note.title;
+            noteContent.value = note.content;
+            
+            // Set color
+            document.querySelectorAll('.color-option').forEach(option => {
+                option.classList.remove('active');
+                if (option.dataset.color === note.color) {
+                    option.classList.add('active');
+                    selectedColor = note.color;
+                }
+            });
+            
+            document.getElementById('noteLocked').checked = note.locked;
+            deleteNoteBtn.style.display = 'block';
+            editModalTitle.textContent = 'Edit Note';
+            closeModal(viewNoteModal);
+            openModal(editNoteModal);
+        }
+        
+        // Save a note
+        function saveNote() {
+            const title = noteTitle.value.trim();
+            const content = noteContent.value.trim();
+            const locked = document.getElementById('noteLocked').checked;
+            
+            if (!title) {
+                alert('Please enter a title for your note');
+                return;
+            }
+            
+            if (locked && !masterPassword) {
+                alert('Please set a master password in settings before locking notes.');
+                return;
+            }
+            
+            const now = new Date();
+            
+            if (currentNoteId) {
+                // Update existing note
+                const noteIndex = notes.findIndex(note => note.id === currentNoteId);
+                if (noteIndex !== -1) {
+                    notes[noteIndex].title = title;
+                    notes[noteIndex].content = content;
+                    notes[noteIndex].color = selectedColor;
+                    notes[noteIndex].locked = locked;
+                    notes[noteIndex].updatedAt = now.toISOString();
+                }
+            } else {
+                // Create new note
+                const newNote = {
+                    id: 'note_' + Date.now(),
+                    title,
+                    content,
+                    color: selectedColor,
+                    locked,
+                    createdAt: now.toISOString(),
+                    updatedAt: now.toISOString()
+                };
+                
+                notes.unshift(newNote);
+            }
+            
+            saveNotes();
+            renderNotes();
+            closeModal(editNoteModal);
+        }
+        
+        // Delete a note
+        function deleteNote() {
+            if (!confirm('Are you sure you want to delete this note?')) return;
+            
+            notes = notes.filter(note => note.id !== currentNoteId);
+            saveNotes();
+            renderNotes();
+            closeModal(editNoteModal);
+        }
+        
+        // Delete all notes
+        function deleteAllNotes() {
+            if (!confirm('Are you sure you want to delete ALL notes? This cannot be undone.')) return;
+            
+            notes = [];
+            saveNotes();
+            renderNotes();
+            settingsMenu.classList.remove('active');
+        }
+        
+        // Toggle note lock
+        function toggleNoteLock() {
+            const note = notes.find(note => note.id === currentNoteId);
+            if (!note) return;
+            
+            if (!masterPassword) {
+                alert('Please set a master password in settings before locking notes.');
+                return;
+            }
+            
+            note.locked = !note.locked;
+            saveNotes();
+            
+            // Update UI
+            lockNoteBtn.innerHTML = note.locked ? '<i class="fas fa-unlock"></i>' : '<i class="fas fa-lock"></i>';
+            lockNoteBtn.title = note.locked ? 'Unlock Note' : 'Lock Note';
+            
+            // Update note content display
+            viewNoteContent.textContent = note.locked ? '🔒 Content is locked' : note.content;
+            
+            // Also update the note in the grid/list
+            renderNotes();
+        }
+        
+        // Set master password
+        function setMasterPassword() {
+            const password = prompt('Enter a master password for locking notes:');
+            if (password === null) return; // User cancelled
+            
+            if (!password) {
+                alert('Password cannot be empty!');
+                return;
+            }
+            
+            masterPassword = password;
+            localStorage.setItem('pronotes_master_password', password);
+            alert('Master password set successfully!');
+            settingsMenu.classList.remove('active');
+        }
+        
+        // Create a backup
+        function createBackup() {
+            const timestamp = new Date().toISOString();
+            const backup = {
+                id: 'backup_' + Date.now(),
+                timestamp: timestamp,
+                notes: [...notes] // Clone the notes array
+            };
+            
+            // Get existing backups
+            let backups = JSON.parse(localStorage.getItem('pronotes_backups')) || [];
+            
+            // Add new backup
+            backups.unshift(backup);
+            
+            // Keep only the last 5 backups
+            if (backups.length > 5) {
+                backups = backups.slice(0, 5);
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('pronotes_backups', JSON.stringify(backups));
+            
+            alert(`Backup created successfully at ${new Date(timestamp).toLocaleString()}`);
+            populateBackupList();
+        }
+        
+        // Restore a backup
+        function restoreBackup(backupId) {
+            if (!confirm('Are you sure you want to restore this backup? Current notes will be replaced.')) return;
+            
+            // Get existing backups
+            const backups = JSON.parse(localStorage.getItem('pronotes_backups')) || [];
+            const backup = backups.find(b => b.id === backupId);
+            
+            if (!backup) {
+                alert('Backup not found!');
+                return;
+            }
+            
+            // Restore notes
+            notes = [...backup.notes];
+            saveNotes();
+            renderNotes();
+            closeModal(backupModal);
+            alert('Backup restored successfully!');
+        }
+        
+        // Delete a backup
+        function deleteBackup(backupId) {
+            if (!confirm('Are you sure you want to delete this backup?')) return;
+            
+            // Get existing backups
+            let backups = JSON.parse(localStorage.getItem('pronotes_backups')) || [];
+            
+            // Remove the backup
+            backups = backups.filter(b => b.id !== backupId);
+            
+            // Save to localStorage
+            localStorage.setItem('pronotes_backups', JSON.stringify(backups));
+            
+            // Update UI
+            populateBackupList();
+            alert('Backup deleted successfully!');
+        }
+        
+        // Populate backup list in modal
+        function populateBackupList() {
+            // Get backups
+            const backups = JSON.parse(localStorage.getItem('pronotes_backups')) || [];
+            
+            // Clear existing list
+            backupList.innerHTML = '';
+            
+            if (backups.length === 0) {
+                backupList.innerHTML = '<div class="no-backups">No backups available</div>';
+                return;
+            }
+            
+            // Add each backup to the list
+            backups.forEach(backup => {
+                const date = new Date(backup.timestamp);
+                const formattedDate = date.toLocaleString();
+                
+                const backupItem = document.createElement('div');
+                backupItem.className = 'backup-item';
+                backupItem.innerHTML = `
+                    <div>
+                        <strong>${formattedDate}</strong>
+                        <div>${backup.notes.length} notes</div>
+                    </div>
+                    <div class="backup-actions">
+                        <button class="backup-restore" data-id="${backup.id}">Restore</button>
+                        <button class="backup-delete" data-id="${backup.id}">Delete</button>
+                    </div>
+                `;
+                
+                backupList.appendChild(backupItem);
+            });
+            
+            // Add event listeners to the buttons
+            document.querySelectorAll('.backup-restore').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const backupId = e.target.dataset.id;
+                    restoreBackup(backupId);
+                });
+            });
+            
+            document.querySelectorAll('.backup-delete').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const backupId = e.target.dataset.id;
+                    deleteBackup(backupId);
+                });
+            });
+        }
+        
+        // Share note
+        function shareNote() {
+            const note = notes.find(note => note.id === currentNoteId);
+            if (!note) return;
+            
+            const shareText = `${note.title}\n\n${note.content}`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: note.title,
+                    text: note.content,
+                })
+                .catch(error => console.log('Sharing failed', error));
+            } else {
+                // Fallback for desktop
+                navigator.clipboard.writeText(shareText)
+                    .then(() => alert('Note copied to clipboard!'))
+                    .catch(err => console.error('Could not copy text: ', err));
+            }
+        }
+        
+        // Copy note to clipboard
+        function copyNote() {
+            const note = notes.find(note => note.id === currentNoteId);
+            if (!note) return;
+            
+            const text = `${note.title}\n\n${note.content}`;
+            
+            navigator.clipboard.writeText(text)
+                .then(() => alert('Note copied to clipboard!'))
+                .catch(err => console.error('Could not copy text: ', err));
+        }
+        
+        // Open modal
+        function openModal(modal) {
+            modal.classList.add('active');
+        }
+        
+        // Close modal
+        function closeModal(modal) {
+            modal.classList.remove('active');
+        }
+        
+        // Toggle theme
+        function toggleTheme() {
+            document.body.classList.toggle('light-theme');
+            const themeIcon = themeToggle.querySelector('i');
+            const themeText = themeToggle.querySelector('span');
+            
+            if (document.body.classList.contains('light-theme')) {
+                themeIcon.className = 'fas fa-sun';
+                themeText.textContent = 'Switch to Dark Theme';
+            } else {
+                themeIcon.className = 'fas fa-moon';
+                themeText.textContent = 'Switch to Light Theme';
+            }
+        }
+        
+        // Search notes
+        function searchNotes() {
+            const term = searchInput.value.toLowerCase().trim();
+            
+            if (!term) {
+                renderNotes();
+                return;
+            }
+            
+            const filteredNotes = notes.filter(note => {
+                // Skip locked notes in search
+                if (note.locked) return false;
+                
+                return note.title.toLowerCase().includes(term) || 
+                       note.content.toLowerCase().includes(term);
+            });
+            
+            renderNotes(filteredNotes);
+        }
+        
+        // Check if first launch and show tutorial
+        function checkFirstLaunch() {
+            const firstLaunch = localStorage.getItem('pronotes_first_launch');
+            
+            if (!firstLaunch) {
+                tutorialActive = true;
+                localStorage.setItem('pronotes_first_launch', 'completed');
+                startTutorial();
+            }
+        }
+        
+        // Start onboarding tutorial
+        function startTutorial() {
+            // Create example note for tutorial
+            const exampleNote = {
+                id: 'note_tutorial',
+                title: 'Welcome to ProNotes!',
+                content: 'This is an example note. Tap on notes to view them, and use the + button to create new ones.',
+                color: 'purple',
+                locked: false,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+            
+            notes.unshift(exampleNote);
+            saveNotes();
+            renderNotes();
+            
+            // Highlight UI elements
+            setTimeout(() => highlightElement(addNoteBtn, 60, 'Create new notes with this button'), 500);
+            
+            setTimeout(() => {
+                const firstNote = document.querySelector('.note-card');
+                if (firstNote) {
+                    highlightElement(firstNote, 200, 'Tap on notes to view them');
+                }
+            }, 4000);
+            
+            setTimeout(() => {
+                highlightElement(searchBtn, 30, 'Search your notes here');
+            }, 8000);
+            
+            setTimeout(() => {
+                highlightElement(settingsBtn, 30, 'Access settings here');
+                tutorialActive = false;
+                
+                // Remove example note after tutorial
+                setTimeout(() => {
+                    notes = notes.filter(note => note.id !== 'note_tutorial');
+                    saveNotes();
+                    renderNotes();
+                }, 3000);
+            }, 12000);
+        }
+        
+        // Highlight element for tutorial
+        function highlightElement(element, size, text) {
+            if (!element) return;
+            
+            const rect = element.getBoundingClientRect();
+            tutorialHighlight.style.width = size + 'px';
+            tutorialHighlight.style.height = size + 'px';
+            tutorialHighlight.style.left = (rect.left + rect.width/2 - size/2) + 'px';
+            tutorialHighlight.style.top = (rect.top + rect.height/2 - size/2) + 'px';
+            tutorialHighlight.style.display = 'block';
+            
+            // Show tooltip
+            const tooltip = document.createElement('div');
+            tooltip.className = 'tutorial-tooltip';
+            tooltip.textContent = text;
+            tooltip.style.position = 'fixed';
+            tooltip.style.left = (rect.left + rect.width/2) + 'px';
+            tooltip.style.top = (rect.top + rect.height + 20) + 'px';
+            tooltip.style.transform = 'translateX(-50%)';
+            tooltip.style.backgroundColor = 'rgba(0,0,0,0.8)';
+            tooltip.style.color = 'white';
+            tooltip.style.padding = '8px 12px';
+            tooltip.style.borderRadius = '8px';
+            tooltip.style.zIndex = '201';
+            tooltip.style.whiteSpace = 'nowrap';
+            document.body.appendChild(tooltip);
+            
+            setTimeout(() => {
+                tutorialHighlight.style.display = 'none';
+                tooltip.remove();
+            }, 3500);
+        }
+        
+        // Set up event listeners
+        function setupEventListeners() {
+            // Header actions
+            searchBtn.addEventListener('click', () => {
+                searchContainer.classList.toggle('active');
+                if (searchContainer.classList.contains('active')) {
+                    searchInput.focus();
+                }
+            });
+            
+            settingsBtn.addEventListener('click', () => {
+                settingsMenu.classList.toggle('active');
+            });
+            
+            // Close search when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!searchContainer.contains(e.target) && !searchBtn.contains(e.target)) {
+                    searchContainer.classList.remove('active');
+                }
+                
+                if (!settingsMenu.contains(e.target) && !settingsBtn.contains(e.target)) {
+                    settingsMenu.classList.remove('active');
+                }
+            });
+            
+            // Theme toggle
+            themeToggle.addEventListener('click', toggleTheme);
+            
+            // Sort notes
+            sortNotesBtn.addEventListener('click', sortNotes);
+            
+            // Set master password
+            setPasswordBtn.addEventListener('click', setMasterPassword);
+            
+            // Backup notes
+            backupNotesBtn.addEventListener('click', () => {
+                createBackup();
+                settingsMenu.classList.remove('active');
+            });
+            
+            // Restore notes
+            restoreNotesBtn.addEventListener('click', () => {
+                openModal(backupModal);
+                populateBackupList();
+                settingsMenu.classList.remove('active');
+            });
+            
+            // Create backup from modal
+            createBackupBtn.addEventListener('click', createBackup);
+            
+            // Close backup modal
+            closeBackupModal.addEventListener('click', () => closeModal(backupModal));
+            
+            // Delete all notes
+            deleteAllBtn.addEventListener('click', deleteAllNotes);
+            
+            // View toggles
+            gridViewBtn.addEventListener('click', () => {
+                currentView = 'grid';
+                gridViewBtn.classList.add('active');
+                listViewBtn.classList.remove('active');
+                notesContainer.className = 'notes-grid';
+                renderNotes();
+            });
+            
+            listViewBtn.addEventListener('click', () => {
+                currentView = 'list';
+                listViewBtn.classList.add('active');
+                gridViewBtn.classList.remove('active');
+                notesContainer.className = 'notes-list';
+                renderNotes();
+            });
+            
+            // Add new note
+            addNoteBtn.addEventListener('click', createNote);
+            
+            // Modal controls
+            closeEditModal.addEventListener('click', () => closeModal(editNoteModal));
+            closeViewModal.addEventListener('click', () => closeModal(viewNoteModal));
+            saveNoteBtn.addEventListener('click', saveNote);
+            deleteNoteBtn.addEventListener('click', deleteNote);
+            
+            // Note actions from view modal
+            editNoteBtn.addEventListener('click', editNote);
+            lockNoteBtn.addEventListener('click', toggleNoteLock);
+            shareNoteBtn.addEventListener('click', shareNote);
+            copyNoteBtn.addEventListener('click', copyNote);
+            
+            // Color selection
+            colorOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    document.querySelector('.color-option.active').classList.remove('active');
+                    option.classList.add('active');
+                    selectedColor = option.dataset.color;
+                });
+            });
+            
+            // Search input
+            searchInput.addEventListener('input', searchNotes);
+            
+            // Close modals when clicking on backdrop
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        closeModal(modal);
+                    }
+                });
+            });
+        }
+        
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
